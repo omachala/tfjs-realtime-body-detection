@@ -1,4 +1,4 @@
-import { Component } from "@stencil/core";
+import { Component, State } from "@stencil/core";
 import * as posenet from "@tensorflow-models/posenet";
 import "@tensorflow/tfjs";
 
@@ -20,6 +20,9 @@ export class TfjsPosenet {
   private canvasElement: HTMLCanvasElement;
   private model: posenet.PoseNet;
 
+  @State()
+  private ready: boolean = false;
+
   async componentDidLoad(): Promise<any> {
     const constraints = {
       audio: false,
@@ -29,6 +32,7 @@ export class TfjsPosenet {
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       this.videoElement.srcObject = stream;
       this.model = await posenet.load();
+      this.ready = true;
       this.detect();
     }
   }
@@ -66,9 +70,25 @@ export class TfjsPosenet {
     ctx.fillText(text, x + 10, y);
   }
 
+  public renderLoading(): JSX.Element {
+    if (this.ready) {
+      return null;
+    }
+    const style = {
+      width: this.width + "px",
+      height: this.height + "px"
+    };
+    return (
+      <div class="fixed loading" style={style}>
+        <div class="loader">Loading...</div>
+      </div>
+    );
+  }
+
   public render(): JSX.Element {
     return (
       <div class="detection">
+        {this.renderLoading()}
         <video
           autoPlay
           playsInline
